@@ -1,0 +1,250 @@
+{
+  "samples": [
+    {
+      "id": "natural-001",
+      "category": "natural-prompt",
+      "audio": "audio/natural-001.wav",
+      "expected": "Review this pull request and explain the most important correctness risks.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-002",
+      "category": "natural-prompt",
+      "audio": "audio/natural-002.wav",
+      "expected": "Find the cause of the failing test and describe the smallest safe fix.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-003",
+      "category": "natural-prompt",
+      "audio": "audio/natural-003.wav",
+      "expected": "Add validation to the settings form and keep the current error messages.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-004",
+      "category": "natural-prompt",
+      "audio": "audio/natural-004.wav",
+      "expected": "Run the relevant tests and summarize any failures you cannot resolve.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-005",
+      "category": "natural-prompt",
+      "audio": "audio/natural-005.wav",
+      "expected": "Refactor this function without changing its public behavior.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-006",
+      "category": "natural-prompt",
+      "audio": "audio/natural-006.wav",
+      "expected": "Compare these two approaches and recommend the simpler one.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-007",
+      "category": "natural-prompt",
+      "audio": "audio/natural-007.wav",
+      "expected": "Explain why this request is slow before making any changes.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-008",
+      "category": "natural-prompt",
+      "audio": "audio/natural-008.wav",
+      "expected": "Update the documentation with a concise migration example.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-009",
+      "category": "natural-prompt",
+      "audio": "audio/natural-009.wav",
+      "expected": "Check the current implementation for race conditions and memory leaks.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "natural-010",
+      "category": "natural-prompt",
+      "audio": "audio/natural-010.wav",
+      "expected": "Create a regression test that fails before the fix and passes afterward.",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "technical-001",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-001.wav",
+      "expected": "Use React Hook Form and Zod to validate the settings form.",
+      "required_terms": ["React Hook Form", "Zod"],
+      "hotwords": ["React Hook Form", "Zod"]
+    },
+    {
+      "id": "technical-002",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-002.wav",
+      "expected": "Move the server action into Next.js and invalidate the cache.",
+      "required_terms": ["Next.js"],
+      "hotwords": ["Next.js"]
+    },
+    {
+      "id": "technical-003",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-003.wav",
+      "expected": "Write the worker in Go and package it with Docker.",
+      "required_terms": ["Go", "Docker"],
+      "hotwords": ["Go", "Docker"]
+    },
+    {
+      "id": "technical-004",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-004.wav",
+      "expected": "Deploy the service to AWS behind an application load balancer.",
+      "required_terms": ["AWS"],
+      "hotwords": ["AWS"]
+    },
+    {
+      "id": "technical-005",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-005.wav",
+      "expected": "Update the Prisma schema and migrate PostgreSQL.",
+      "required_terms": ["Prisma", "PostgreSQL"],
+      "hotwords": ["Prisma", "PostgreSQL"]
+    },
+    {
+      "id": "technical-006",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-006.wav",
+      "expected": "Add component tests with Vitest and shadcn UI.",
+      "required_terms": ["Vitest", "shadcn UI"],
+      "hotwords": ["Vitest", "shadcn UI"]
+    },
+    {
+      "id": "technical-007",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-007.wav",
+      "expected": "Ask Codex to review the TypeScript implementation.",
+      "required_terms": ["Codex", "TypeScript"],
+      "hotwords": ["Codex", "TypeScript"]
+    },
+    {
+      "id": "technical-008",
+      "category": "technical-vocabulary",
+      "audio": "audio/technical-008.wav",
+      "expected": "Open the coding assistant and inspect the React hydration warning.",
+      "required_terms": ["coding assistant", "React"],
+      "hotwords": ["coding assistant", "React"]
+    },
+    {
+      "id": "identifier-001",
+      "category": "identifier",
+      "audio": "audio/identifier-001.wav",
+      "expected": "Open app slash settings slash page dot tsx and inspect SettingsForm.",
+      "required_terms": ["SettingsForm"],
+      "hotwords": ["app/settings/page.tsx", "SettingsForm"],
+      "identifiers": ["SettingsForm"]
+    },
+    {
+      "id": "identifier-002",
+      "category": "identifier",
+      "audio": "audio/identifier-002.wav",
+      "expected": "Rename parseConfig to loadConfig without changing its callers.",
+      "required_terms": ["parseConfig", "loadConfig"],
+      "hotwords": ["parseConfig", "loadConfig"],
+      "identifiers": ["parseConfig", "loadConfig"]
+    },
+    {
+      "id": "identifier-003",
+      "category": "identifier",
+      "audio": "audio/identifier-003.wav",
+      "expected": "Fix the test in internal slash auth slash token underscore test dot go.",
+      "required_terms": [],
+      "hotwords": ["internal/auth/token_test.go"],
+      "identifiers": []
+    },
+    {
+      "id": "identifier-004",
+      "category": "identifier",
+      "audio": "audio/identifier-004.wav",
+      "expected": "The environment variable is database underscore URL.",
+      "required_terms": [],
+      "hotwords": ["DATABASE_URL"],
+      "identifiers": []
+    },
+    {
+      "id": "identifier-005",
+      "category": "identifier",
+      "audio": "audio/identifier-005.wav",
+      "expected": "Call useQueryClient inside UserProfileCard.",
+      "required_terms": ["useQueryClient", "UserProfileCard"],
+      "hotwords": ["useQueryClient", "UserProfileCard"],
+      "identifiers": ["useQueryClient", "UserProfileCard"]
+    },
+    {
+      "id": "hesitation-001",
+      "category": "hesitation",
+      "audio": "audio/hesitation-001.wav",
+      "expected": "Add a timeout, actually make that a context deadline, around the request.",
+      "required_terms": ["context deadline"],
+      "hotwords": ["context deadline"]
+    },
+    {
+      "id": "hesitation-002",
+      "category": "hesitation",
+      "audio": "audio/hesitation-002.wav",
+      "expected": "Use Jest, no, use Vitest for this test suite.",
+      "required_terms": ["Vitest"],
+      "hotwords": ["Jest", "Vitest"]
+    },
+    {
+      "id": "hesitation-003",
+      "category": "hesitation",
+      "audio": "audio/hesitation-003.wav",
+      "expected": "Um, check the Docker compose file for the PostgreSQL port.",
+      "required_terms": ["Docker", "PostgreSQL"],
+      "hotwords": ["Docker Compose", "PostgreSQL"]
+    },
+    {
+      "id": "hesitation-004",
+      "category": "hesitation",
+      "audio": "audio/hesitation-004.wav",
+      "expected": "Refactor the hook, I mean the useSession hook, but keep its return type.",
+      "required_terms": ["useSession"],
+      "hotwords": ["useSession"],
+      "identifiers": ["useSession"]
+    },
+    {
+      "id": "silence-001",
+      "category": "silence-noise",
+      "audio": "audio/silence-001.wav",
+      "expected": "",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "silence-002",
+      "category": "silence-noise",
+      "audio": "audio/silence-002.wav",
+      "expected": "",
+      "required_terms": [],
+      "hotwords": []
+    },
+    {
+      "id": "silence-003",
+      "category": "silence-noise",
+      "audio": "audio/silence-003.wav",
+      "expected": "",
+      "required_terms": [],
+      "hotwords": []
+    }
+  ]
+}

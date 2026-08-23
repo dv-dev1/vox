@@ -1,0 +1,30 @@
+# Local runtimes, model weights, and generated state
+.local/
+
+# Private benchmark recordings and manifests
+benchmarks/audio/
+benchmarks/manifest.json
+
+# Generated recordings and reports containing personal transcripts
+*.wav
+artifacts/benchmark-results.json
+
+# Build output
+/vox
+/bin/
+__pycache__/
+*.py[cod]
+
+# Local secrets and developer configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Test and editor output
+coverage.out
+.coverage
+.DS_Store
+.idea/
+.vscode/
