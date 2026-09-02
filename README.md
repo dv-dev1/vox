@@ -19,6 +19,17 @@ submits a prompt, or executes transcribed text.
 > Cinnamon on X11 and an NVIDIA GPU with CUDA compute capability 8.6. See
 > [Current limitations](#current-limitations) before installing it elsewhere.
 
+> [!NOTE]
+> This fork targets **GNOME on Wayland, CPU-only inference** (no NVIDIA/CUDA
+> required) — tested on Fedora with an Intel Iris Xe iGPU. It swaps X11/`xdotool`
+> paste for `wl-clipboard`+`ydotool`, drops the CUDA build path in favor of a
+> plain CPU `whisper.cpp` build (`small-q8_0` model, greedy decoding for speed),
+> and replaces the GTK overlay (broken on mutter — GNOME doesn't implement
+> `wlr-layer-shell`) with a GNOME Shell extension in
+> `scripts/gnome-extension/vox-overlay@dvdev/` that renders always-on-top
+> inside gnome-shell itself. **Linux only — there is no Windows build or plan
+> to support one.**
+
 ## How it feels
 
 1. Focus any text field.

@@ -11,9 +11,14 @@ readonly whisper_version="1.9.1"
 readonly whisper_commit="f049fff95a089aa9969deb009cdd4892b3e74916"
 readonly whisper_repo="https://github.com/ggml-org/whisper.cpp.git"
 
+# small (not large-v3-turbo) because the turbo decoder was pruned to 4
+# layers and does not support the --translate task: it stays in the source
+# language regardless of -tr. small translates correctly and is ~3-4x faster
+# than medium on this CPU; large-v3-turbo/medium remain unaffected fallbacks
+# via VOX_WHISPER_MODEL if translation quality ever needs to trade back up.
 readonly model_revision="5359861c739e955e79d9a303bcbc70fb988958b1"
-readonly model_file="ggml-large-v3-turbo-q8_0.bin"
-readonly model_sha256="317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1"
+readonly model_file="ggml-small-q8_0.bin"
+readonly model_sha256="49c8fb02b65e6049d5fa6c04f81f53b867b5ec9540406812c643f177317f779f"
 readonly model_url="https://huggingface.co/ggerganov/whisper.cpp/resolve/${model_revision}/${model_file}"
 
 readonly vad_revision="9ffd54a1e1ee413ddf265af9913beaf518d1639b"
@@ -25,8 +30,8 @@ readonly project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly download_dir="${project_root}/.local/downloads"
 readonly tool_dir="${project_root}/.local/tools"
 readonly source_dir="${project_root}/.local/src/whisper.cpp-v${whisper_version}"
-readonly runtime_dir="${project_root}/.local/runtime/whisper.cpp-v${whisper_version}-cuda"
-readonly model_dir="${project_root}/.local/models/whisper-large-v3-turbo-q8_0"
+readonly runtime_dir="${project_root}/.local/runtime/whisper.cpp-v${whisper_version}-cpu"
+readonly model_dir="${project_root}/.local/models/whisper-small-q8_0"
 readonly vad_dir="${project_root}/.local/models/whisper-vad"
 readonly cmake_dir="${tool_dir}/cmake-${cmake_version}-linux-x86_64"
 
@@ -68,15 +73,15 @@ fi
 fetch_and_verify "$model_url" "$model_dir/$model_file" "$model_sha256"
 fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
 
+# No NVIDIA GPU on this machine: CPU-only build (AVX2/AVX512 auto-detected via
+# GGML_NATIVE) instead of the upstream project's mandatory CUDA build.
 "$cmake_dir/bin/cmake" \
   -S "$source_dir" \
   -B "$runtime_dir" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_C_COMPILER=/usr/bin/gcc-15 \
-  -DCMAKE_CXX_COMPILER=/usr/bin/g++-15 \
-  -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-15 \
-  -DCMAKE_CUDA_ARCHITECTURES=86 \
-  -DGGML_CUDA=ON \
+  -DCMAKE_C_COMPILER=/usr/bin/gcc \
+  -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+  -DGGML_NATIVE=ON \
   -DWHISPER_BUILD_TESTS=OFF
 "$cmake_dir/bin/cmake" --build "$runtime_dir" --target whisper-cli --parallel "$(nproc)"
 

@@ -98,36 +98,22 @@ func doctor(root string) error {
 		}
 		checks = append(checks, check{Name: name, Status: status})
 	}
-	if _, err := exec.LookPath("nvidia-smi"); err != nil {
-		checks = append(checks, check{Name: "NVIDIA driver", Status: "not installed"})
-	} else {
-		output, runErr := exec.Command("nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader").CombinedOutput()
-		if runErr != nil {
-			checks = append(checks, check{Name: "NVIDIA driver", Status: "unavailable", Detail: strings.TrimSpace(string(output))})
-		} else {
-			checks = append(checks, check{Name: "NVIDIA driver", Status: "ok", Detail: strings.TrimSpace(string(output))})
+	for _, name := range []string{"wl-copy", "wl-paste", "ydotool"} {
+		_, err := exec.LookPath(name)
+		status := "ok"
+		if err != nil {
+			status = "not installed"
 		}
+		checks = append(checks, check{Name: name, Status: status})
 	}
 	if _, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root)); err != nil {
 		checks = append(checks, check{Name: "whisper runtime/model", Status: "unavailable", Detail: err.Error()})
 	} else {
-		checks = append(checks, check{Name: "whisper runtime/model", Status: "ok", Detail: "provider=cuda"})
+		checks = append(checks, check{Name: "whisper runtime/model", Status: "ok", Detail: "provider=cpu"})
 	}
-	checks = append(checks, check{Name: "CUDA user-space libraries", Status: cudaLibraryStatus()})
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(checks)
-}
-
-func cudaLibraryStatus() string {
-	output, err := exec.Command("ldconfig", "-p").Output()
-	if err != nil || !strings.Contains(string(output), "libcublasLt.so.13") {
-		return "missing libcublasLt.so.13"
-	}
-	if !strings.Contains(string(output), "libcudnn.so.9") {
-		return "missing libcudnn.so.9"
-	}
-	return "available"
 }
 
 func recordCommand(ctx context.Context, args []string) error {

@@ -1,0 +1,7 @@
+{
+  "uuid": "vox-overlay@dvdev",
+  "name": "Vox Overlay",
+  "description": "Always-on-top status bar for Vox push-to-talk dictation. Reads $XDG_RUNTIME_DIR/vox/desktop-status.json and renders inside gnome-shell itself, so it stays above every window without needing wlr-layer-shell (which mutter does not implement).",
+  "shell-version": ["50"],
+  "version": 1
+}

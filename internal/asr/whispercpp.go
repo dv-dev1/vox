@@ -19,12 +19,15 @@ import (
 )
 
 type WhisperCPPConfig struct {
-	Binary   string
-	Model    string
-	VADModel string
-	Language string
-	Threads  int
-	UseGPU   bool
+	Binary    string
+	Model     string
+	VADModel  string
+	Language  string
+	Threads   int
+	UseGPU    bool
+	Translate bool
+	BeamSize  int
+	BestOf    int
 }
 
 type WhisperCPP struct {
@@ -54,6 +57,12 @@ func NewWhisperCPP(config WhisperCPPConfig) (*WhisperCPP, error) {
 	}
 	if config.Threads < 1 {
 		config.Threads = 4
+	}
+	if config.BeamSize < 1 {
+		config.BeamSize = 1
+	}
+	if config.BestOf < 1 {
+		config.BestOf = 1
 	}
 	return &WhisperCPP{config: config}, nil
 }
@@ -88,6 +97,12 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 		"-f", request.AudioPath,
 		"-l", w.config.Language,
 		"-t", strconv.Itoa(w.config.Threads),
+		// whisper-cli defaults to 5 beams + best-of-5, which redoes the
+		// (cheap) decode pass 5x for a translation-quality gain that is
+		// usually marginal. Greedy (1/1) leaves encode time — the real
+		// cost on this CPU — untouched and cuts decode close to zero.
+		"-bs", strconv.Itoa(w.config.BeamSize),
+		"-bo", strconv.Itoa(w.config.BestOf),
 		"-oj",
 		"-of", prefix,
 		"-nt",
@@ -96,6 +111,9 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 	}
 	if !w.config.UseGPU {
 		args = append(args, "-ng")
+	}
+	if w.config.Translate {
+		args = append(args, "--translate")
 	}
 	if prompt != "" {
 		args = append(args, "--prompt", prompt)
@@ -247,14 +265,14 @@ func whisperPrompt(path string) (string, error) {
 }
 
 func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {
-	runtimeRoot := filepath.Join(projectRoot, ".local", "runtime", "whisper.cpp-v1.9.1-cuda")
+	runtimeRoot := filepath.Join(projectRoot, ".local", "runtime", "whisper.cpp-v1.9.1-cpu")
 	binary := firstExisting(
 		os.Getenv("VOX_WHISPER_BIN"),
 		filepath.Join(runtimeRoot, "bin", "whisper-cli"),
 	)
 	model := os.Getenv("VOX_WHISPER_MODEL")
 	if model == "" {
-		model = filepath.Join(projectRoot, ".local", "models", "whisper-large-v3-turbo-q8_0", "ggml-large-v3-turbo-q8_0.bin")
+		model = filepath.Join(projectRoot, ".local", "models", "whisper-small-q8_0", "ggml-small-q8_0.bin")
 	}
 	vadModel := os.Getenv("VOX_WHISPER_VAD_MODEL")
 	if vadModel == "" {
@@ -266,7 +284,29 @@ func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {
 			threads = parsed
 		}
 	}
-	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: "en", Threads: threads, UseGPU: true}
+	// This machine has no NVIDIA GPU: whisper-cli is built CPU-only (see
+	// scripts/fetch-whisper.sh), so GPU offload is never requested.
+	language := os.Getenv("VOX_WHISPER_LANGUAGE")
+	if language == "" {
+		language = "pt"
+	}
+	translate := true
+	if value := os.Getenv("VOX_WHISPER_TRANSLATE"); value != "" {
+		translate = value != "0"
+	}
+	beamSize := 1
+	if value := os.Getenv("VOX_WHISPER_BEAM_SIZE"); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
+			beamSize = parsed
+		}
+	}
+	bestOf := 1
+	if value := os.Getenv("VOX_WHISPER_BEST_OF"); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed > 0 {
+			bestOf = parsed
+		}
+	}
+	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: language, Threads: threads, UseGPU: false, Translate: translate, BeamSize: beamSize, BestOf: bestOf}
 }
 
 func firstExisting(paths ...string) string {
