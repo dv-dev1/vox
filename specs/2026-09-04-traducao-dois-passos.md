@@ -1,11 +1,16 @@
 # Tradução em dois passos (revertida para transcrição direta)
 
-> Fecho: depois de medir, o usuário optou por **não traduzir**. O ditado sai em
-> português literal, que é o modo mais fiel e o mais rápido (6,4s contra 6,7s
-> com Argos e 11,6s com o passo único do whisper). O tradutor continua
-> instalado e a um `VOX_TRANSLATE_TO_EN=1` de distância; o que o trabalho
-> entregou de permanente foi o `--audio-ctx 768`, o hotwords enxuto e o
-> `--hotwords` chegando ao `toggle`.
+> Fecho: o padrão voltou a ser o passo único do whisper (`--translate`) com o
+> modelo `small`, como antes deste trabalho. A medição abaixo continua válida —
+> o português literal é mais rápido e mais fiel ao que foi dito — mas no uso
+> real ele se mostrou pior de ler: quando o whisper erra a acústica, a
+> transcrição cola o erro cru, enquanto o `--translate` sempre devolve uma frase
+> bem formada. Fidelidade perdeu para legibilidade.
+>
+> O que ficou de permanente: o `--hotwords` chegando ao `toggle`, o tradutor
+> Argos instalado a um `VOX_WHISPER_TRANSLATE=0 VOX_TRANSLATE_TO_EN=1` de
+> distância, e o teto de contexto do decoder documentado. O `--audio-ctx 768`
+> foi revertido: acelera frase curta, corta fala longa.
 
 ## Intenção
 

@@ -1,0 +1,20 @@
+Frase um. Preciso terminar o front-end antes do deploy de sexta-feira.
+Frase dois. O banco de dados está com uma consulta lenta na tabela de pedidos.
+Frase três. Abri um pull request corrigindo o cabeçalho de autenticação.
+Frase quatro. O teste de integração falha quando o cache está vazio.
+Frase cinco. Vamos migrar o serviço de pagamento para outro provedor.
+Frase seis. A latência subiu depois que aumentamos o número de réplicas.
+Frase sete. Preciso revisar o contrato da interface antes de publicar.
+Frase oito. O relatório mensal ainda depende de uma planilha manual.
+Frase nove. Configurei o alerta para disparar acima de quinhentos milissegundos.
+Frase dez. A documentação da API está desatualizada desde a versão anterior.
+Frase onze. O time de produto quer uma tela nova de configurações.
+Frase doze. Removi a dependência antiga que ninguém mais importava.
+Frase treze. O processo de build quebrou por causa de uma variável de ambiente.
+Frase quatorze. Precisamos decidir se mantemos o suporte à versão legada.
+Frase quinze. O consumo de memória cresce devagar ao longo do dia.
+Frase dezesseis. Agendei a manutenção do servidor para a madrugada de domingo.
+Frase dezessete. A fila de mensagens acumulou durante o pico da tarde.
+Frase dezoito. Escrevi um script para limpar os registros antigos.
+Frase dezenove. O certificado expira no fim do mês que vem.
+Frase vinte. Encerrando o teste de transcrição longa aqui.

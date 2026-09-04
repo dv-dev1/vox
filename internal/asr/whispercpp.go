@@ -29,6 +29,7 @@ type WhisperCPPConfig struct {
 	BeamSize  int
 	BestOf    int
 	AudioCtx  int
+	UseVAD    bool
 }
 
 type WhisperCPP struct {
@@ -109,9 +110,16 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 		"-bo", strconv.Itoa(w.config.BestOf),
 		"-oj",
 		"-of", prefix,
-		"-nt",
-		"--vad",
-		"--vad-model", w.config.VADModel,
+	}
+	// Sem `-nt` de propósito. O token de timestamp é a âncora que faz o decoder
+	// avançar a janela: com `--no-timestamps` uma fala de 116 s devolve 4 frases
+	// de 20, sem ele devolve 20 de 20. O texto colado não muda — os timestamps
+	// vivem em campos próprios do JSON, fora de `transcription[].text`.
+	if w.config.UseVAD {
+		// Desligado por padrão porque não paga: em ditado curto não economiza
+		// nada (2536 ms contra 2569 ms) e em fala longa ficou 1 s mais lento com
+		// o mesmo texto. Só vale para gravação com silêncio longo de verdade.
+		args = append(args, "--vad", "--vad-model", w.config.VADModel)
 	}
 	if w.config.AudioCtx > 0 {
 		// O encoder custa por janela, não por segundo falado: uma frase de 4 s
@@ -329,7 +337,8 @@ func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {
 			audioCtx = parsed
 		}
 	}
-	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: language, Threads: threads, UseGPU: false, Translate: translate, BeamSize: beamSize, BestOf: bestOf, AudioCtx: audioCtx}
+	useVAD := os.Getenv("VOX_WHISPER_VAD") == "1"
+	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: language, Threads: threads, UseGPU: false, Translate: translate, BeamSize: beamSize, BestOf: bestOf, AudioCtx: audioCtx, UseVAD: useVAD}
 }
 
 func firstExisting(paths ...string) string {

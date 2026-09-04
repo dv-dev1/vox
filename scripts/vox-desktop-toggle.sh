@@ -10,19 +10,11 @@ readonly hotwords_file="${HOME}/.config/vox/hotwords.txt"
 readonly translate_script="${project_root}/scripts/translate-pt-en.py"
 readonly translate_python="${project_root}/.local/venv-translate/bin/python"
 
-# O ditado sai em português, literal: é o que o whisper faz de mais preciso, e
-# qualquer tradução — a do próprio whisper (--translate) ou a do Argos — troca
-# palavras pelo caminho. Medido no mesmo áudio: o passo único do whisper leva
-# 11,6s contra 6,7s dos dois passos, e nenhum dos dois é mais fiel que a
-# transcrição direta.
-#
-# Para receber inglês, VOX_TRANSLATE_TO_EN=1 liga o segundo passo (Argos, local,
-# ~0,35s). VOX_WHISPER_TRANSLATE=1 usa o passo único do whisper e dispensa o
-# Argos; nesse modo convém VOX_WHISPER_AUDIO_CTX=0, porque o contexto de áudio
-# encurtado, ótimo para transcrever, faz a tradução do whisper levar 83s.
-export VOX_WHISPER_TRANSLATE="${VOX_WHISPER_TRANSLATE:-0}"
+# O `--translate` nunca devolve texto quebrado: força uma frase bem formada e
+# paga em paráfrase o que o modo transcrição cobra em erro acústico cru.
+# Português literal: VOX_WHISPER_TRANSLATE=0.
+export VOX_WHISPER_TRANSLATE="${VOX_WHISPER_TRANSLATE:-1}"
 export VOX_TRANSLATE_TO_EN="${VOX_TRANSLATE_TO_EN:-0}"
-export VOX_WHISPER_MODEL="${VOX_WHISPER_MODEL:-${project_root}/.local/models/whisper-medium-q8_0/ggml-medium-q8_0.bin}"
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
   [[ "$XDG_RUNTIME_DIR" == /* && "$XDG_RUNTIME_DIR" != "/" ]] || {
     printf 'vox: XDG_RUNTIME_DIR must be an absolute, non-root path\n' >&2
