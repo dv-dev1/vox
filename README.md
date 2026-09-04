@@ -115,11 +115,36 @@ build artifacts, then compiles whisper.cpp locally. Expect roughly 1.3 GiB of
 disk use and an 834 MiB model download. The first run can take several minutes,
 depending on the connection and CPU.
 
-`make doctor` should report `ok` for PipeWire, the NVIDIA driver, the Whisper
-runtime/model, and CUDA user-space libraries. tmux is required only for the
-terminal-specific insertion commands. Do not install the shortcut until these
+`make doctor` should report `ok` for PipeWire, the Wayland clipboard tools
+(`wl-copy`, `wl-paste`, `ydotool`), and the Whisper runtime/model. tmux is
+required only for the terminal-specific insertion commands. Do not install the shortcut until these
 checks pass; use the [troubleshooting guide](docs/troubleshooting.md) if one is
 reported as unavailable.
+
+### 2b. Prepare the offline translator (optional)
+
+The desktop shortcut dictates in Portuguese and pastes English. It does that in
+two steps — whisper transcribes Portuguese literally, then a local Argos pt→en
+model translates — because asking whisper to hear and translate in one pass
+paraphrases the meaning and swaps words in fast speech.
+
+```bash
+python3 -m venv .local/venv-translate
+.local/venv-translate/bin/pip install ctranslate2 sentencepiece
+curl -fL -o /tmp/pt_en.argosmodel https://argos-net.com/v1/translate-pt_en-1_9.argosmodel
+mkdir -p .local/models/translate-pt-en
+python3 -c "import zipfile; zipfile.ZipFile('/tmp/pt_en.argosmodel').extractall('/tmp/argos')"
+cp /tmp/argos/translate-pt_en-1_9/sentencepiece.model .local/models/translate-pt-en/
+cp -r /tmp/argos/translate-pt_en-1_9/model .local/models/translate-pt-en/
+```
+
+Roughly 300 MiB of disk. Everything runs locally; nothing is sent anywhere.
+Translation itself costs about 0.35 s per dictation.
+
+Skip this step to keep the transcript in Portuguese — `vox-desktop-toggle.sh`
+detects the missing venv and pastes the transcript untranslated rather than
+losing the dictation. To go back to whisper's own one-pass translation instead,
+set `VOX_WHISPER_TRANSLATE=1`.
 
 ### 3. Install the desktop shortcuts
 

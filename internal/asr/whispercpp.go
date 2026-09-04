@@ -28,6 +28,7 @@ type WhisperCPPConfig struct {
 	Translate bool
 	BeamSize  int
 	BestOf    int
+	AudioCtx  int
 }
 
 type WhisperCPP struct {
@@ -63,6 +64,9 @@ func NewWhisperCPP(config WhisperCPPConfig) (*WhisperCPP, error) {
 	}
 	if config.BestOf < 1 {
 		config.BestOf = 1
+	}
+	if config.AudioCtx < 0 {
+		config.AudioCtx = 0
 	}
 	return &WhisperCPP{config: config}, nil
 }
@@ -108,6 +112,16 @@ func (w *WhisperCPP) Transcribe(ctx context.Context, request Request) (Result, e
 		"-nt",
 		"--vad",
 		"--vad-model", w.config.VADModel,
+	}
+	if w.config.AudioCtx > 0 {
+		// O encoder custa por janela, não por segundo falado: uma frase de 4 s
+		// paga quase o mesmo que uma de 20 s. Encurtar o contexto de áudio de
+		// 1500 para 768 corta ~30% do tempo sem mudar o texto (medido). Abaixo
+		// disso degrada: em 512 o modelo perde palavras e entra em loop de
+		// repetição, ficando mais lento que o padrão.
+		// ponytail: 768 vale para o ditado curto de sempre; fala longa e
+		// contínua pode querer mais contexto — subir via VOX_WHISPER_AUDIO_CTX.
+		args = append(args, "-ac", strconv.Itoa(w.config.AudioCtx))
 	}
 	if !w.config.UseGPU {
 		args = append(args, "-ng")
@@ -306,7 +320,13 @@ func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {
 			bestOf = parsed
 		}
 	}
-	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: language, Threads: threads, UseGPU: false, Translate: translate, BeamSize: beamSize, BestOf: bestOf}
+	audioCtx := 768
+	if value := os.Getenv("VOX_WHISPER_AUDIO_CTX"); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
+			audioCtx = parsed
+		}
+	}
+	return WhisperCPPConfig{Binary: binary, Model: model, VADModel: vadModel, Language: language, Threads: threads, UseGPU: false, Translate: translate, BeamSize: beamSize, BestOf: bestOf, AudioCtx: audioCtx}
 }
 
 func firstExisting(paths ...string) string {

@@ -32,7 +32,7 @@ Usage:
   vox transcribe [--hotwords <path>] <audio-path>
   vox benchmark --manifest <path> [--report <path>]
   vox insert --target <tmux-pane> [--text <text> | --stdin]
-  vox toggle (--target <tmux-pane> | --output <path>) [--source <pipewire-node>]
+  vox toggle (--target <tmux-pane> | --output <path>) [--source <pipewire-node>] [--hotwords <path>]
   vox cancel
 
 Safety: insert and toggle paste text but never submit it.`
@@ -233,6 +233,7 @@ func toggleCommand(ctx context.Context, root string, args []string) error {
 	target := flags.String("target", "", "explicit tmux pane")
 	output := flags.String("output", "", "write exact transcript to a new file")
 	source := flags.String("source", "", "explicit PipeWire source node for a new recording")
+	hotwords := flags.String("hotwords", "", "one hotword phrase per line")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -243,7 +244,7 @@ func toggleCommand(ctx context.Context, root string, args []string) error {
 	if err != nil {
 		return err
 	}
-	toggler := toggle.Toggle{Recorder: record.Recorder{Binary: "pw-record", Target: *source}, Transcriber: transcriber}
+	toggler := toggle.Toggle{Recorder: record.Recorder{Binary: "pw-record", Target: *source}, Transcriber: transcriber, HotwordsPath: *hotwords}
 	var state string
 	if *target != "" {
 		state, err = toggler.Run(ctx, *target)

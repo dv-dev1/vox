@@ -30,10 +30,11 @@ type State struct {
 }
 
 type Toggle struct {
-	StateDir    string
-	Recorder    record.Recorder
-	Transcriber asr.Transcriber
-	Inserter    voxtmux.Inserter
+	StateDir     string
+	Recorder     record.Recorder
+	Transcriber  asr.Transcriber
+	Inserter     voxtmux.Inserter
+	HotwordsPath string
 }
 
 func DefaultStateDir() string {
@@ -188,7 +189,7 @@ func (t Toggle) stop(ctx context.Context, statePath string, state State) (string
 	if t.Transcriber == nil {
 		return "", errors.New("transcriber is not configured")
 	}
-	result, err := t.Transcriber.Transcribe(ctx, asr.Request{AudioPath: state.AudioPath})
+	result, err := t.Transcriber.Transcribe(ctx, asr.Request{AudioPath: state.AudioPath, HotwordsPath: t.HotwordsPath})
 	if err != nil {
 		_ = os.Remove(statePath)
 		return "", fmt.Errorf("transcription failed; audio kept at %s: %w", state.AudioPath, err)
