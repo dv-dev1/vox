@@ -23,7 +23,8 @@ submits a prompt, or executes transcribed text.
 > This fork targets **GNOME on Wayland, CPU-only inference** (no NVIDIA/CUDA
 > required) — tested on Fedora with an Intel Iris Xe iGPU. It swaps X11/`xdotool`
 > paste for `wl-clipboard`+`ydotool`, drops the CUDA build path in favor of a
-> plain CPU `whisper.cpp` build (`small-q8_0` model, greedy decoding for speed),
+> plain CPU `whisper.cpp` build (`medium-q8_0` model, greedy decoding and a
+> shortened `--audio-ctx` for speed),
 > and replaces the GTK overlay (broken on mutter — GNOME doesn't implement
 > `wlr-layer-shell`) with a GNOME Shell extension in
 > `scripts/gnome-extension/vox-overlay@dvdev/` that renders always-on-top
@@ -123,10 +124,14 @@ reported as unavailable.
 
 ### 2b. Prepare the offline translator (optional)
 
-The desktop shortcut dictates in Portuguese and pastes English. It does that in
-two steps — whisper transcribes Portuguese literally, then a local Argos pt→en
-model translates — because asking whisper to hear and translate in one pass
-paraphrases the meaning and swaps words in fast speech.
+By default the shortcut pastes what you actually said, in the language you said
+it — that is what whisper does most accurately. Translation is off.
+
+If you want English out, this installs a local Argos pt→en model and
+`VOX_TRANSLATE_TO_EN=1` turns it on as a second step after transcription. Do not
+use whisper's own one-pass `--translate` for this: measured on the same audio it
+took 11.6 s against 6.4 s for plain transcription, and was no more faithful —
+translation of any kind swaps words on the way.
 
 ```bash
 python3 -m venv .local/venv-translate
@@ -141,10 +146,14 @@ cp -r /tmp/argos/translate-pt_en-1_9/model .local/models/translate-pt-en/
 Roughly 300 MiB of disk. Everything runs locally; nothing is sent anywhere.
 Translation itself costs about 0.35 s per dictation.
 
-Skip this step to keep the transcript in Portuguese — `vox-desktop-toggle.sh`
-detects the missing venv and pastes the transcript untranslated rather than
-losing the dictation. To go back to whisper's own one-pass translation instead,
-set `VOX_WHISPER_TRANSLATE=1`.
+Skip this step entirely to keep transcripts in Portuguese, which is the
+default. Even with the venv installed, `vox-desktop-toggle.sh` translates only
+when `VOX_TRANSLATE_TO_EN=1`, and if the translator fails it pastes the
+Portuguese transcript rather than losing the dictation.
+
+To use whisper's one-pass translation anyway, set `VOX_WHISPER_TRANSLATE=1`
+together with `VOX_WHISPER_AUDIO_CTX=0` — the shortened audio context that makes
+transcription 30% faster makes that translation take 83 s.
 
 ### 3. Install the desktop shortcuts
 

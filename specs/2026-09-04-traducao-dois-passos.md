@@ -1,4 +1,11 @@
-# Tradução em dois passos
+# Tradução em dois passos (revertida para transcrição direta)
+
+> Fecho: depois de medir, o usuário optou por **não traduzir**. O ditado sai em
+> português literal, que é o modo mais fiel e o mais rápido (6,4s contra 6,7s
+> com Argos e 11,6s com o passo único do whisper). O tradutor continua
+> instalado e a um `VOX_TRANSLATE_TO_EN=1` de distância; o que o trabalho
+> entregou de permanente foi o `--audio-ctx 768`, o hotwords enxuto e o
+> `--hotwords` chegando ao `toggle`.
 
 ## Intenção
 
@@ -19,10 +26,28 @@ perde palavras e entra em loop, ficando mais lento que o padrão), e o corte do
 arquivo de hotwords de 312 para 65 termos — a lista longa custava 4,4s de
 `prompt time` por ditado, mais do que a própria transcrição.
 
-A lista de hotwords é um orçamento, não um depósito: cada termo é pago em tempo
-a cada ditado, então só entram siglas e nomes próprios que o modelo erra de
-fato. Palavra comum que ele já acerta (`function`, `deploy`, `Linux`) custa o
-mesmo e não devolve nada.
+A lista de hotwords é um orçamento, não um depósito, e o limite é muito mais
+apertado do que parece. O decoder do whisper tem 448 tokens de contexto no
+total, compartilhados entre o prompt de vocabulário e o texto que ele está
+transcrevendo. Uma lista grande não deixa a transcrição pior aos poucos: ela
+**come a fala**.
+
+Medido num ditado corrido de 30s, mesma gravação, só mudando o tamanho da lista:
+
+| lista | saída |
+| --- | --- |
+| 73 termos | `Lengraph é uma biblioteca, que utiliza o padrão arquitetural...` — perde os primeiros 10 s de fala |
+| 25 termos | `LLM é uma biblioteca, que utiliza o padrão arquitetural utilizado no LLM.` — trunca e ainda troca `LangGraph` por `LLM`, um termo puxado da própria lista |
+| 10 termos | fala inteira, e `LangGraph` escrito corretamente |
+| vazia | fala inteira, `LangGraph` vira `Land Graph` |
+
+Ou seja: acima de ~10 termos o prompt não ajuda, atrapalha — e o modo de falha
+é silencioso e feio, texto picotado com palavras inventadas no lugar do que foi
+cortado. Não existe versão "grande e cuidadosa" dessa lista.
+
+O usuário optou por deixá-la vazia e corrigir os nomes próprios à mão, que é a
+escolha certa: 10 vagas não cobrem um vocabulário de trabalho, e uma lista fixa
+envelhece junto com o projeto em que ele está mexendo.
 
 ## Critério de aceite
 

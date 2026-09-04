@@ -320,7 +320,10 @@ func DefaultWhisperCPPConfig(projectRoot string) WhisperCPPConfig {
 			bestOf = parsed
 		}
 	}
-	audioCtx := 768
+	// Desligado por padrão. Encurtar o contexto de áudio corta ~30% do tempo em
+	// frase curta, mas em fala longa e contínua o encoder perde trecho e o
+	// modelo inventa texto para preencher. Precisão vale mais que os 30%.
+	audioCtx := 0
 	if value := os.Getenv("VOX_WHISPER_AUDIO_CTX"); value != "" {
 		if parsed, err := strconv.Atoi(value); err == nil && parsed >= 0 {
 			audioCtx = parsed

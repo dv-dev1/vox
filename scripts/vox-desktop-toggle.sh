@@ -10,12 +10,18 @@ readonly hotwords_file="${HOME}/.config/vox/hotwords.txt"
 readonly translate_script="${project_root}/scripts/translate-pt-en.py"
 readonly translate_python="${project_root}/.local/venv-translate/bin/python"
 
-# Tradução em dois passos: o whisper transcreve português literal e
-# translate-pt-en.py traduz para inglês. Pedir os dois de uma vez (--translate do
-# whisper) parafraseia o sentido e troca palavras em fala rápida. Ambas as
-# variáveis continuam sobrescrevíveis pelo ambiente, para voltar ao passo único
-# sem editar este arquivo.
+# O ditado sai em português, literal: é o que o whisper faz de mais preciso, e
+# qualquer tradução — a do próprio whisper (--translate) ou a do Argos — troca
+# palavras pelo caminho. Medido no mesmo áudio: o passo único do whisper leva
+# 11,6s contra 6,7s dos dois passos, e nenhum dos dois é mais fiel que a
+# transcrição direta.
+#
+# Para receber inglês, VOX_TRANSLATE_TO_EN=1 liga o segundo passo (Argos, local,
+# ~0,35s). VOX_WHISPER_TRANSLATE=1 usa o passo único do whisper e dispensa o
+# Argos; nesse modo convém VOX_WHISPER_AUDIO_CTX=0, porque o contexto de áudio
+# encurtado, ótimo para transcrever, faz a tradução do whisper levar 83s.
 export VOX_WHISPER_TRANSLATE="${VOX_WHISPER_TRANSLATE:-0}"
+export VOX_TRANSLATE_TO_EN="${VOX_TRANSLATE_TO_EN:-0}"
 export VOX_WHISPER_MODEL="${VOX_WHISPER_MODEL:-${project_root}/.local/models/whisper-medium-q8_0/ggml-medium-q8_0.bin}"
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
   [[ "$XDG_RUNTIME_DIR" == /* && "$XDG_RUNTIME_DIR" != "/" ]] || {
@@ -178,11 +184,11 @@ if (exec 9>&-; cd "$project_root" && "$vox_binary" toggle \
   if [[ "$action" == "start" ]]; then
     write_status "recording" "Ctrl + Alt + Espaço para concluir"
   else
-    # Segundo passo. Se o venv de tradução não existir ou o script falhar, cola
-    # o português mesmo assim — entregar no idioma errado é melhor que perder o
-    # ditado.
+    # Segundo passo, desligado por padrão. Se o venv não existir ou o script
+    # falhar, cola o português mesmo assim — entregar no idioma errado é melhor
+    # que perder o ditado.
     paste_source="$transcript_file"
-    if [[ -x "$translate_python" ]] &&
+    if [[ "$VOX_TRANSLATE_TO_EN" == "1" && "$VOX_WHISPER_TRANSLATE" == "0" && -x "$translate_python" ]] &&
       "$translate_python" "$translate_script" <"$transcript_file" >"$translated_file" 2>>"$command_log"; then
       paste_source="$translated_file"
     fi
