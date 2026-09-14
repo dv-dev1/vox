@@ -6,15 +6,12 @@ readonly project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly vox_binary="${project_root}/vox"
 readonly paste_script="${project_root}/scripts/paste-wayland.py"
 readonly sources_script="${project_root}/scripts/vox_audio_sources.py"
-readonly hotwords_file="${HOME}/.config/vox/hotwords.txt"
 readonly translate_script="${project_root}/scripts/translate-pt-en.py"
 readonly translate_python="${project_root}/.local/venv-translate/bin/python"
 
-# O `--translate` nunca devolve texto quebrado: força uma frase bem formada e
-# paga em paráfrase o que o modo transcrição cobra em erro acústico cru.
-# Português literal: VOX_WHISPER_TRANSLATE=0.
-export VOX_WHISPER_TRANSLATE="${VOX_WHISPER_TRANSLATE:-1}"
-export VOX_TRANSLATE_TO_EN="${VOX_TRANSLATE_TO_EN:-0}"
+# O Parakeet só transcreve português; o inglês vem do Argos. VOX_TRANSLATE_TO_EN=0
+# cola o português.
+export VOX_TRANSLATE_TO_EN="${VOX_TRANSLATE_TO_EN:-1}"
 if [[ -n "${XDG_RUNTIME_DIR:-}" ]]; then
   [[ "$XDG_RUNTIME_DIR" == /* && "$XDG_RUNTIME_DIR" != "/" ]] || {
     printf 'vox: XDG_RUNTIME_DIR must be an absolute, non-root path\n' >&2
@@ -124,7 +121,7 @@ select_source() {
     return 1
   fi
   if ! (exec 9>&-; cd "$project_root" && "$vox_binary" toggle \
-    --source "$source_node" --output "$transcript_file" "${hotwords_args[@]}") >>"$command_log" 2>&1; then
+    --source "$source_node" --output "$transcript_file") >>"$command_log" 2>&1; then
     write_status "error" "Não consegui iniciar o novo microfone"
     return 1
   fi
@@ -135,11 +132,6 @@ if [[ ! -x "$vox_binary" ]]; then
   write_status "error" "Compile o Vox primeiro: make build"
   exit 1
 fi
-
-# Technical-vocabulary context prompt for whisper (helps HTML/CSS/etc not get
-# mangled by the small model). Optional: skipped if the user never created it.
-hotwords_args=()
-[[ -f "$hotwords_file" ]] && hotwords_args=(--hotwords "$hotwords_file")
 
 if [[ "${1:-}" == "--select-source" ]]; then
   [[ $# -eq 2 ]] || exit 2
@@ -172,15 +164,14 @@ fi
 source_node="$(jq -r '.name // empty' "$source_file" 2>/dev/null || true)"
 
 if (exec 9>&-; cd "$project_root" && "$vox_binary" toggle \
-  --source "$source_node" --output "$transcript_file" "${hotwords_args[@]}") 2>"$command_log"; then
+  --source "$source_node" --output "$transcript_file") 2>"$command_log"; then
   if [[ "$action" == "start" ]]; then
     write_status "recording" "Ctrl + Alt + Espaço para concluir"
   else
-    # Segundo passo, desligado por padrão. Se o venv não existir ou o script
-    # falhar, cola o português mesmo assim — entregar no idioma errado é melhor
-    # que perder o ditado.
+    # Segundo passo. Se o venv não existir ou o script falhar, cola o português
+    # mesmo assim — entregar no idioma errado é melhor que perder o ditado.
     paste_source="$transcript_file"
-    if [[ "$VOX_TRANSLATE_TO_EN" == "1" && "$VOX_WHISPER_TRANSLATE" == "0" && -x "$translate_python" ]] &&
+    if [[ "$VOX_TRANSLATE_TO_EN" == "1" && -x "$translate_python" ]] &&
       "$translate_python" "$translate_script" <"$transcript_file" >"$translated_file" 2>>"$command_log"; then
       paste_source="$translated_file"
     fi

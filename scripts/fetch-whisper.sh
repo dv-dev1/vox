@@ -11,31 +11,21 @@ readonly whisper_version="1.9.1"
 readonly whisper_commit="f049fff95a089aa9969deb009cdd4892b3e74916"
 readonly whisper_repo="https://github.com/ggml-org/whisper.cpp.git"
 
-# small (not large-v3-turbo) because the turbo decoder was pruned to 4
-# layers and does not support the --translate task: it stays in the source
-# language regardless of -tr. small translates correctly and is ~3-4x faster
-# than medium on this CPU; large-v3-turbo/medium remain unaffected fallbacks
-# via VOX_WHISPER_MODEL if translation quality ever needs to trade back up.
-readonly model_revision="5359861c739e955e79d9a303bcbc70fb988958b1"
-readonly model_file="ggml-small-q8_0.bin"
-readonly model_sha256="49c8fb02b65e6049d5fa6c04f81f53b867b5ec9540406812c643f177317f779f"
-readonly model_url="https://huggingface.co/ggerganov/whisper.cpp/resolve/${model_revision}/${model_file}"
-
-readonly vad_revision="9ffd54a1e1ee413ddf265af9913beaf518d1639b"
-readonly vad_file="ggml-silero-v6.2.0.bin"
-readonly vad_sha256="2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987"
-readonly vad_url="https://huggingface.co/ggml-org/whisper-vad/resolve/${vad_revision}/${vad_file}"
+# Parakeet is built from the whisper.cpp tree: parakeet-cli links libwhisper.
+readonly parakeet_revision="35156454d1a39de06863303dd209fd2bed6ee079"
+readonly parakeet_file="ggml-parakeet-tdt-0.6b-v3-q8_0.bin"
+readonly parakeet_sha256="4d64e9e96c2792186d072fde0034df0ad670cf680a2f53069052ead827fd600e"
+readonly parakeet_url="https://huggingface.co/ggml-org/parakeet-GGUF/resolve/${parakeet_revision}/${parakeet_file}"
 
 readonly project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly download_dir="${project_root}/.local/downloads"
 readonly tool_dir="${project_root}/.local/tools"
 readonly source_dir="${project_root}/.local/src/whisper.cpp-v${whisper_version}"
 readonly runtime_dir="${project_root}/.local/runtime/whisper.cpp-v${whisper_version}-cpu"
-readonly model_dir="${project_root}/.local/models/whisper-small-q8_0"
-readonly vad_dir="${project_root}/.local/models/whisper-vad"
+readonly parakeet_dir="${project_root}/.local/models/parakeet-tdt-0.6b-v3"
 readonly cmake_dir="${tool_dir}/cmake-${cmake_version}-linux-x86_64"
 
-mkdir -p "$download_dir" "$tool_dir" "$(dirname "$source_dir")" "$runtime_dir" "$model_dir" "$vad_dir"
+mkdir -p "$download_dir" "$tool_dir" "$(dirname "$source_dir")" "$runtime_dir" "$parakeet_dir"
 
 fetch_and_verify() {
   local url="$1"
@@ -70,8 +60,7 @@ if [[ -n "$(git -C "$source_dir" status --porcelain --untracked-files=all)" ]]; 
   exit 1
 fi
 
-fetch_and_verify "$model_url" "$model_dir/$model_file" "$model_sha256"
-fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
+fetch_and_verify "$parakeet_url" "$parakeet_dir/$parakeet_file" "$parakeet_sha256"
 
 # No NVIDIA GPU on this machine: CPU-only build (AVX2/AVX512 auto-detected via
 # GGML_NATIVE) instead of the upstream project's mandatory CUDA build.
@@ -83,8 +72,7 @@ fetch_and_verify "$vad_url" "$vad_dir/$vad_file" "$vad_sha256"
   -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
   -DGGML_NATIVE=ON \
   -DWHISPER_BUILD_TESTS=OFF
-"$cmake_dir/bin/cmake" --build "$runtime_dir" --target whisper-cli --parallel "$(nproc)"
+"$cmake_dir/bin/cmake" --build "$runtime_dir" --target parakeet-cli --parallel "$(nproc)"
 
-printf 'Whisper runtime: %s/bin/whisper-cli\n' "$runtime_dir"
-printf 'Whisper model:   %s/%s\n' "$model_dir" "$model_file"
-printf 'Silero VAD:      %s/%s\n' "$vad_dir" "$vad_file"
+printf 'Parakeet runtime: %s/bin/parakeet-cli\n' "$runtime_dir"
+printf 'Parakeet model:   %s/%s\n' "$parakeet_dir" "$parakeet_file"

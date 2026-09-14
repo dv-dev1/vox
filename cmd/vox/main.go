@@ -106,10 +106,10 @@ func doctor(root string) error {
 		}
 		checks = append(checks, check{Name: name, Status: status})
 	}
-	if _, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root)); err != nil {
-		checks = append(checks, check{Name: "whisper runtime/model", Status: "unavailable", Detail: err.Error()})
+	if _, err := asr.NewParakeetCPP(asr.DefaultParakeetCPPConfig(root)); err != nil {
+		checks = append(checks, check{Name: "asr runtime/model", Status: "unavailable", Detail: err.Error()})
 	} else {
-		checks = append(checks, check{Name: "whisper runtime/model", Status: "ok", Detail: "provider=cpu"})
+		checks = append(checks, check{Name: "asr runtime/model", Status: "ok", Detail: "provider=cpu"})
 	}
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
@@ -143,7 +143,7 @@ func transcribeCommand(ctx context.Context, root string, args []string) error {
 	if flags.NArg() != 1 {
 		return errors.New("transcribe requires exactly one audio path")
 	}
-	transcriber, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root))
+	transcriber, err := asr.NewParakeetCPP(asr.DefaultParakeetCPPConfig(root))
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func benchmarkCommand(ctx context.Context, root string, args []string) error {
 	if err != nil {
 		return err
 	}
-	transcriber, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root))
+	transcriber, err := asr.NewParakeetCPP(asr.DefaultParakeetCPPConfig(root))
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func toggleCommand(ctx context.Context, root string, args []string) error {
 	if (*target == "") == (*output == "") {
 		return errors.New("toggle requires exactly one of --target or --output")
 	}
-	transcriber, err := asr.NewWhisperCPP(asr.DefaultWhisperCPPConfig(root))
+	transcriber, err := asr.NewParakeetCPP(asr.DefaultParakeetCPPConfig(root))
 	if err != nil {
 		return err
 	}

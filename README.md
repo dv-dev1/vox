@@ -23,8 +23,8 @@ submits a prompt, or executes transcribed text.
 > This fork targets **GNOME on Wayland, CPU-only inference** (no NVIDIA/CUDA
 > required) — tested on Fedora with an Intel Iris Xe iGPU. It swaps X11/`xdotool`
 > paste for `wl-clipboard`+`ydotool`, drops the CUDA build path in favor of a
-> plain CPU `whisper.cpp` build (`small-q8_0` model, greedy decoding, whisper's
-> one-pass `--translate` for English output),
+> plain CPU `whisper.cpp` build running NVIDIA Parakeet TDT 0.6B v3, which
+> transcribes Portuguese, followed by a local Argos pt→en step for English),
 > and replaces the GTK overlay (broken on mutter — GNOME doesn't implement
 > `wlr-layer-shell`) with a GNOME Shell extension in
 > `scripts/gnome-extension/vox-overlay@dvdev/` that renders always-on-top
@@ -50,9 +50,8 @@ submits a prompt, or executes transcribed text.
   microphone selector.
 - Safe live microphone switching: partial audio is discarded and recording
   restarts on the selected PipeWire source without changing the destination.
-- Fully local Whisper large-v3-turbo Q8_0 inference through whisper.cpp.
-- Silero VAD available behind `VOX_WHISPER_VAD=1`; off by default because it
-  costs time without changing the text.
+- Fully local NVIDIA Parakeet TDT 0.6B v3 inference through whisper.cpp, with a
+  local Argos pt→en translation step.
 - Exact Unicode and multiline paste into native X11 applications.
 - Captured destination window: changing focus while speaking does not redirect
   the final text.
@@ -118,23 +117,22 @@ disk use and an 834 MiB model download. The first run can take several minutes,
 depending on the connection and CPU.
 
 `make doctor` should report `ok` for PipeWire, the Wayland clipboard tools
-(`wl-copy`, `wl-paste`, `ydotool`), and the Whisper runtime/model. tmux is
+(`wl-copy`, `wl-paste`, `ydotool`), and the Parakeet runtime/model. tmux is
 required only for the terminal-specific insertion commands. Do not install the shortcut until these
 checks pass; use the [troubleshooting guide](docs/troubleshooting.md) if one is
 reported as unavailable.
 
-### 2b. Prepare the offline translator (optional)
+### 2b. Prepare the offline translator
 
-By default the shortcut pastes English, produced by whisper's own one-pass
-`--translate`. That mode paraphrases, but it never pastes broken text: the
-translate task forces a well-formed sentence, where plain transcription hands
-you the raw acoustic error. Proper nouns are what it loses.
+The shortcut transcribes Portuguese with NVIDIA Parakeet TDT 0.6B v3 and
+translates it to English with a local Argos pt→en model. Measured on 40 FLEURS
+pt-BR utterances against whisper `small`'s one-pass `--translate`, this
+pipeline produced better English (BLEU 42.2 against 36.6) and kept a 115 s
+dictation whole. It is faster on short dictations (3.5 s against 4.9 s on 12 s
+utterances) and slower past ~30 s: 116 s of speech takes 37.8 s against
+whisper's 31.5 s.
 
-The alternative is transcribing Portuguese literally and translating it in a
-second step with a local Argos pt→en model. It is faster (6.4 s against 11.6 s
-on the same audio) and keeps your wording, at the cost of pasting whatever
-whisper misheard, verbatim. Set `VOX_WHISPER_TRANSLATE=0` plus
-`VOX_TRANSLATE_TO_EN=1` to use it, after installing:
+Install the translator:
 
 ```bash
 python3 -m venv .local/venv-translate
@@ -149,15 +147,9 @@ cp -r /tmp/argos/translate-pt_en-1_9/model .local/models/translate-pt-en/
 Roughly 300 MiB of disk. Everything runs locally; nothing is sent anywhere.
 Translation itself costs about 0.35 s per dictation.
 
-Skip this step entirely to stay on the default one-pass translation. Even with
-the venv installed, `vox-desktop-toggle.sh` uses Argos only when
-`VOX_TRANSLATE_TO_EN=1`, and if the translator fails it pastes the Portuguese
-transcript rather than losing the dictation.
-
-`VOX_WHISPER_AUDIO_CTX` shortens whisper's audio context. It cuts about 30% off
-a short dictation but truncates long continuous speech, and combined with
-`--translate` it makes a dictation take 83 s. It is off by default; leave it off
-unless you are measuring.
+Without this step the shortcut pastes the Portuguese transcript: if the venv is
+missing or the translator fails, Vox pastes Portuguese rather than losing the
+dictation.
 
 ### 3. Install the desktop shortcuts
 
@@ -198,7 +190,7 @@ flowchart LR
     A[Super+V] --> B[Desktop controller]
     B --> C[PipeWire recorder]
     C --> D[Mono 16 kHz PCM WAV]
-    D --> E[Whisper + Silero VAD]
+    D --> E[Parakeet + Argos]
     E --> F[Private transcript file]
     F --> G[Captured X11 window]
     G --> H[Paste without Enter]
@@ -365,14 +357,10 @@ when switching microphones.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `VOX_THREADS` | `8` | Override Whisper inference thread count |
-| `VOX_WHISPER_BIN` | Project-local binary | Override `whisper-cli` path |
-| `VOX_WHISPER_MODEL` | Project-local Q8_0 model | Override Whisper model path |
-| `VOX_WHISPER_VAD_MODEL` | Project-local Silero model | Override VAD model path |
-| `VOX_WHISPER_TRANSLATE` | `1` | `0` transcribes literally instead of translating |
-| `VOX_TRANSLATE_TO_EN` | `0` | `1` adds the local Argos pt→en second step |
-| `VOX_WHISPER_AUDIO_CTX` | `0` (off) | Shortens audio context; truncates long speech |
-| `VOX_WHISPER_VAD` | `0` (off) | `1` re-enables Silero VAD; costs time, same text |
+| `VOX_THREADS` | `8` | Override inference thread count |
+| `VOX_PARAKEET_BIN` | Project-local binary | Override `parakeet-cli` path |
+| `VOX_PARAKEET_MODEL` | Project-local Parakeet v3 Q8_0 | Override Parakeet model path |
+| `VOX_TRANSLATE_TO_EN` | `1` | `0` pastes the Portuguese transcript |
 
 ## Benchmarked configuration
 
